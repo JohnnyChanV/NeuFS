@@ -1,10 +1,14 @@
 # NEUFS — Neuron-Aware Active Few-Shot Learning
 
+**English** | [中文](README_zh.md)
+
 Minimal open-source implementation of **NEUFS**, the few-shot demonstration
 selector described in _Neuron-Aware Active Few-Shot Learning for LLMs_.
 Given an unlabeled pool, NEUFS uses the target LLM's internal FFN neuron
 activations to pick a small, diverse, hallucination-aware set of examples
 for in-context learning.
+
+![NEUFS pipeline overview](assets/overview.png)
 
 The pipeline is two self-contained stages:
 
@@ -18,6 +22,13 @@ The pipeline is two self-contained stages:
      (higher → more unique circuits → more hallucination-prone),
    * `D̃(x)` is the min-max normalized Jaccard distance to the cluster medoid
      (lower → more representative).
+
+**Why does the consensus count Q(x) track hallucination?** Samples that
+activate *more* unique neurons are empirically harder for the model to
+answer correctly — bins with higher `#Unique Activations` show a clear
+downward trend in accuracy (p<0.001):
+
+<p align="center"><img src="assets/consensus_correctness.png" alt="Q(x) vs accuracy" width="520"/></p>
 
 ## Repo layout
 
@@ -108,6 +119,20 @@ bash scripts/run_example.sh
 
 Per-model best settings used in the paper are in Table 6.
 
+### Ablations from the paper
+
+`tau` sweep on MMLU-Pro (Qwen3-4B). Lower `tau` — i.e. more diversity
+weight — is consistently better for this model; 4B is often best at
+`tau ≈ 0`, while 8B peaks around `tau ≈ 0.5`.
+
+<p align="center"><img src="assets/ablation_tau_4B.png" alt="tau ablation on Qwen3-4B" width="520"/></p>
+
+`topk_per_sample` (neuron signature density) is fairly flat in the
+2k–10k range — once the neuron signature is dense enough, selection is
+robust to the exact `K`:
+
+<p align="center"><img src="assets/ablation_K.png" alt="topk_per_sample ablation" width="520"/></p>
+
 ## Programmatic API
 
 ```python
@@ -130,6 +155,17 @@ indices = neufs_select(feats, consensus, n_shots=10, tau=0.5)
   count), **not** `config.hidden_size`.
 * Activation collection holds one layer's `act_fn` output for the whole
   batch in memory; tune `--batch_size` down for long prompts or big models.
+
+## Acknowledgement
+
+The neuron-activation collection in [`neufs/collect.py`](neufs/collect.py)
+is a direct port of the `get_neuron` routine in **MUI-Eval**:
+[ALEX-nlp/MUI-Eval – neuron_and_sae/get_performance/get_neuron.py](https://github.com/ALEX-nlp/MUI-Eval/blob/main/neuron_and_sae/get_performance/get_neuron.py).
+The FFN hook target, the contribution-score formula
+(`activate_scores * token_projections`), and the per-layer
+`top_k = min(top_k_per_layer, num_positions * hidden_size)` flatten-then-topk
+convention all follow MUI-Eval. Please cite that paper as well if you use
+this code.
 
 ## Citation
 

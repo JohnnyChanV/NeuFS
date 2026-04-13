@@ -10,11 +10,16 @@ For each sample in the unlabeled pool:
      contribution score  S^l_{y_t, i} = k^l_i * (w^l_{out,i} . e_{y_t})
      i.e. the element-wise product of the neuron activation and the neuron's
      direct projection onto the predicted-token embedding (Chen et al., 2025).
-  4. Per layer, keep the top-K (position, neuron) entries by contribution score
-     and dump them to JSONL.
+  4. Per layer, flatten (num_positions, hidden_size) and keep the top-K
+     (position, neuron) entries by contribution score; dump to JSONL.
 
 The resulting JSONL is the only input needed for the selection step
 (see `scripts/02_select_fewshot.py`).
+
+Reference implementation this is ported from:
+  https://github.com/ALEX-nlp/MUI-Eval/blob/main/neuron_and_sae/get_performance/get_neuron.py
+The hook target, the contribution formula (`activate_scores * token_projections`),
+and the per-layer flatten-then-topk convention all follow MUI-Eval.
 """
 
 import json
@@ -162,6 +167,8 @@ class NeuronActivationCollector:
                 scores_activate[layer][b_idx].append(activate_scores[idx].detach().cpu())
 
         # -- per case / per layer: top-k by contribution score --
+        # Matches MUI-Eval's get_neuron.py: flatten (num_positions, hidden_size)
+        # and take top-k over the full flattened dim, capped at top_k_per_layer.
         with open(output_path, "a", encoding="utf-8") as f:
             for i in range(this_B):
                 top_neurons = []
@@ -170,8 +177,8 @@ class NeuronActivationCollector:
                         continue
                     stacked = torch.stack(scores_logit[layer][i], dim=0)  # (num_positions, hidden_size)
                     num_positions, hidden_size = stacked.shape
-                    top_k = min(self.top_k_per_layer, num_positions)
-                    top_values, top_indices = torch.topk(stacked.flatten(), top_k)
+                    flat = stacked.flatten()
+                    top_values, top_indices = torch.topk(flat, self.top_k_per_layer)
                     for v, flat_idx in zip(top_values.tolist(), top_indices.tolist()):
                         top_neurons.append({
                             "layer": layer,

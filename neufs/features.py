@@ -55,11 +55,13 @@ def build_features(
         if not neuron_meta:
             continue
 
+        # NOTE: matches the original notebook exactly -- `range(max_pos)` is
+        # half-open, so the last position (== max_pos) is intentionally dropped.
         max_pos = max(item["position"] for item in neuron_meta)
         unique_neurons = set()
         local_scores = {}
 
-        for pos in range(max_pos + 1):
+        for pos in range(max_pos):
             pos_items = [it for it in neuron_meta if it["position"] == pos]
             pos_items.sort(key=lambda x: x["score"], reverse=True)
             for it in pos_items:
