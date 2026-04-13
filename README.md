@@ -1,6 +1,6 @@
 # NEUFS — Neuron-Aware Active Few-Shot Learning for LLMs
 
-**English** | [中文](README_zh.md)
+<!-- **English** | [中文](README_zh.md) -->
 
 *Zhuowei Chen, Liwei Chen, Christian Schunn, Raquel Coelho, Xiang Lorraine Li*
 
@@ -146,6 +146,11 @@ The FFN hook target, the contribution-score formula
 (`activate_scores * token_projections`), and the per-layer
 `top_k = min(top_k_per_layer, num_positions * hidden_size)` flatten-then-topk
 convention all follow MUI-Eval.
+
+## Acknowledgement
+This research was supported in part by the University of Pittsburgh Center for Research Computing and Data, RRID:SCR\_022735, through the resources provided. Specifically, this work used the H2P cluster, which is supported by NSF award number OAC-2117681. The research is also funded by the Learning Research Development Center, University of Pittsburgh.
+
+We are also grateful to the Pitt NLP group, and the anonymous reviewers for their constructive feedback and suggestions.
 
 ## Citation
 
