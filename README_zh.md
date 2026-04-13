@@ -22,7 +22,10 @@
 
 **为什么 Q(x) 能追踪幻觉?** 激活"独特神经元"越多的样本,经验上越
 容易被模型答错——按 `#Unique Activations` 分箱后,准确率随之单调下降
-(p<0.001):
+(p<0.001)。这和已有工作的发现一致:神经元层面的 agreement / consensus
+是判断 LLM 是否走在可靠推理路径上的一个可解释的机制层面信号
+[[Li et al., 2025a]](https://arxiv.org/abs/2504.07440),
+[[Li et al., 2025b]](https://arxiv.org/abs/2510.26277)。
 
 <p align="center"><img src="assets/consensus_correctness.png" alt="Q(x) vs 准确率" width="520"/></p>
 
@@ -102,30 +105,6 @@ python scripts/02_select_fewshot.py \
 ```bash
 bash scripts/run_example.sh
 ```
-
-## 关键超参
-
-| 名称 | 常用值 | 作用 |
-| --- | --- | --- |
-| `--top_k_per_layer` | 2000 | Stage 1 内每层的贡献度上限。论文用 2000。 |
-| `--topk_per_sample` | 2000–10000 | 聚类前做的全局 top-K 贡献度过滤。越大神经元签名越稠密。对应论文 Fig. 3 的 ablation。 |
-| `--tau` | 0.0–1.0 | 0 ≈ 纯多样性(靠近簇中心),1 ≈ 纯共识。论文里 8B 模型常用 0.5,4B 多用 0。见 Table 6。 |
-| `--n_init` | 10 | K-Medoids 多起点次数,想更快就调小。 |
-
-论文 Table 6 给了各个模型的最佳超参。
-
-### 论文里的 ablation
-
-`tau` 在 MMLU-Pro (Qwen3-4B) 上的扫描。这个模型上更偏向"多样性"
-(`tau` 更小)效果更好;4B 常常在 `tau ≈ 0` 处最好,8B 则在
-`tau ≈ 0.5` 附近。
-
-<p align="center"><img src="assets/ablation_tau_4B.png" alt="Qwen3-4B tau ablation" width="520"/></p>
-
-`topk_per_sample`(神经元签名的稠密程度)在 2k–10k 范围基本平坦——
-只要签名够稠密,最终选样对 `K` 的选择并不敏感:
-
-<p align="center"><img src="assets/ablation_K.png" alt="topk_per_sample ablation" width="520"/></p>
 
 ## 程序化 API
 

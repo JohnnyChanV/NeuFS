@@ -26,7 +26,11 @@ The pipeline is two self-contained stages:
 **Why does the consensus count Q(x) track hallucination?** Samples that
 activate *more* unique neurons are empirically harder for the model to
 answer correctly — bins with higher `#Unique Activations` show a clear
-downward trend in accuracy (p<0.001):
+downward trend in accuracy (p<0.001). This is consistent with prior
+findings that neuron-level agreement / consensus is a mechanistically
+grounded signal of whether an LLM is on a reliable inference path
+[[Li et al., 2025a]](https://arxiv.org/abs/2504.07440),
+[[Li et al., 2025b]](https://arxiv.org/abs/2510.26277).
 
 <p align="center"><img src="assets/consensus_correctness.png" alt="Q(x) vs accuracy" width="520"/></p>
 
@@ -108,30 +112,6 @@ prompt template.
 bash scripts/run_example.sh
 ```
 
-## Hyperparameters that matter
-
-| Name | Typical | Effect |
-| --- | --- | --- |
-| `--top_k_per_layer` | 2000 | Per-layer contribution cap in stage 1. Paper uses 2000. |
-| `--topk_per_sample` | 2000–10000 | Global top-K contribution filter before clustering. Larger = denser neuron signature. See ablation Fig. 3. |
-| `--tau` | 0.0–1.0 | 0 ≈ pure diversity (cluster center), 1 ≈ pure consensus. Paper: 0.5 for 8B models, often 0 for 4B. See Table 6. |
-| `--n_init` | 10 | Multi-start K-Medoids. Reduce for speed. |
-
-Per-model best settings used in the paper are in Table 6.
-
-### Ablations from the paper
-
-`tau` sweep on MMLU-Pro (Qwen3-4B). Lower `tau` — i.e. more diversity
-weight — is consistently better for this model; 4B is often best at
-`tau ≈ 0`, while 8B peaks around `tau ≈ 0.5`.
-
-<p align="center"><img src="assets/ablation_tau_4B.png" alt="tau ablation on Qwen3-4B" width="520"/></p>
-
-`topk_per_sample` (neuron signature density) is fairly flat in the
-2k–10k range — once the neuron signature is dense enough, selection is
-robust to the exact `K`:
-
-<p align="center"><img src="assets/ablation_K.png" alt="topk_per_sample ablation" width="520"/></p>
 
 ## Programmatic API
 
