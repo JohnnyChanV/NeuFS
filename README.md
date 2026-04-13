@@ -98,7 +98,7 @@ python scripts/02_select_fewshot.py \
     --output_path outputs/essay_comments/neufs_5shot.json \
     --n_shots 5 \
     --tau 0.5 \
-    --topk_per_sample 5000 \
+    --topk_per_sample 4000 \
     --n_init 10 \
     --verbose
 ```

@@ -28,7 +28,7 @@ for N in 5 10 20 30; do
         --output_path "outputs/essay_comments/neufs_${N}shot.json" \
         --n_shots "$N" \
         --tau 0.5 \
-        --topk_per_sample 5000 \
+        --topk_per_sample 4000 \
         --n_init 10 \
         --verbose
 done
