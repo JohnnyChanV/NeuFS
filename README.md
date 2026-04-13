@@ -148,9 +148,11 @@ The FFN hook target, the contribution-score formula
 convention all follow MUI-Eval.
 
 ## Acknowledgement
-This research was supported in part by the University of Pittsburgh Center for Research Computing and Data, RRID:SCR\_022735, through the resources provided. Specifically, this work used the H2P cluster, which is supported by NSF award number OAC-2117681. The research is also funded by the Learning Research Development Center, University of Pittsburgh.
+- This research was supported in part by the University of Pittsburgh Center for Research Computing and Data, RRID:SCR\_022735, through the resources provided. Specifically, this work used the H2P cluster, which is supported by NSF award number OAC-2117681. 
 
-We are also grateful to the Pitt NLP group, and the anonymous reviewers for their constructive feedback and suggestions.
+- The research is also funded by the Learning Research Development Center, University of Pittsburgh.
+
+- We are also grateful to the Pitt NLP group, and the anonymous reviewers for their constructive feedback and suggestions.
 
 ## Citation
 
