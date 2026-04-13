@@ -137,7 +137,7 @@ indices = neufs_select(feats, consensus, n_shots=10, tau=0.5)
 * Activation collection holds one layer's `act_fn` output for the whole
   batch in memory; tune `--batch_size` down for long prompts or big models.
 
-## Acknowledgement
+## Code Reference
 
 The neuron-activation collection in [`neufs/collect.py`](neufs/collect.py)
 is a direct port of the `get_neuron` routine in **MUI-Eval**:
@@ -145,8 +145,7 @@ is a direct port of the `get_neuron` routine in **MUI-Eval**:
 The FFN hook target, the contribution-score formula
 (`activate_scores * token_projections`), and the per-layer
 `top_k = min(top_k_per_layer, num_positions * hidden_size)` flatten-then-topk
-convention all follow MUI-Eval. Please cite that paper as well if you use
-this code.
+convention all follow MUI-Eval.
 
 ## Citation
 

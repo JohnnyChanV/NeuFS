@@ -131,15 +131,14 @@ indices = neufs_select(feats, consensus, n_shots=10, tau=0.5)
 * 激活采集时,整批会把一层的 `act_fn` 输出留在显存里;遇到长 prompt
   或大模型时,把 `--batch_size` 调小。
 
-## 致谢
+## 代码参考
 
 [`neufs/collect.py`](neufs/collect.py) 里的神经元激活采集部分直接移植自
 **MUI-Eval** 的 `get_neuron`:
 [ALEX-nlp/MUI-Eval – neuron_and_sae/get_performance/get_neuron.py](https://github.com/ALEX-nlp/MUI-Eval/blob/main/neuron_and_sae/get_performance/get_neuron.py)。
 FFN hook 位置、贡献度公式 (`activate_scores * token_projections`)、
 以及每层 `top_k = min(top_k_per_layer, num_positions * hidden_size)`
-的 flatten-then-topk 规则都沿用 MUI-Eval。如果使用本代码,请一并引用
-它的论文。
+的 flatten-then-topk 规则都沿用 MUI-Eval。
 
 ## 引用
 
