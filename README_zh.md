@@ -1,6 +1,10 @@
-# NEUFS — 基于神经元激活的主动 Few-Shot 选样
+# NEUFS — Neuron-Aware Active Few-Shot Learning for LLMs
+
+
 
 [English](README.md) | **中文**
+
+*Zhuowei Chen, Liwei Chen, Christian Schunn, Raquel Coelho, Xiang Lorraine Li*
 
 **NEUFS** 的最小开源实现,对应论文 _Neuron-Aware Active Few-Shot Learning for LLMs_。
 给定一个无标注候选池,NEUFS 利用目标 LLM 内部的 FFN 神经元激活,挑选

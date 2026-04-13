@@ -1,6 +1,8 @@
-# NEUFS — Neuron-Aware Active Few-Shot Learning
+# NEUFS — Neuron-Aware Active Few-Shot Learning for LLMs
 
 **English** | [中文](README_zh.md)
+
+*Zhuowei Chen, Liwei Chen, Christian Schunn, Raquel Coelho, Xiang Lorraine Li*
 
 Minimal open-source implementation of **NEUFS**, the few-shot demonstration
 selector described in _Neuron-Aware Active Few-Shot Learning for LLMs_.
