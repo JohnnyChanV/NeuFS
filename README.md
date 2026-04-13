@@ -32,7 +32,6 @@ grounded signal of whether an LLM is on a reliable inference path
 [[Li et al., 2025a]](https://arxiv.org/abs/2504.07440),
 [[Li et al., 2025b]](https://arxiv.org/abs/2510.26277).
 
-<p align="center"><img src="assets/consensus_correctness.png" alt="Q(x) vs accuracy" width="520"/></p>
 
 ## Repo layout
 
