@@ -31,8 +31,8 @@ answer correctly — bins with higher `#Unique Activations` show a clear
 downward trend in accuracy (p<0.001). This is consistent with prior
 findings that neuron-level agreement / consensus is a mechanistically
 grounded signal of whether an LLM is on a reliable inference path
-[[Li et al., 2025a]](https://arxiv.org/abs/2504.07440),
-[[Li et al., 2025b]](https://arxiv.org/abs/2510.26277).
+[[Cao et al., 2025a]](https://arxiv.org/abs/2504.07440),
+[[Chen et al., 2025b]](https://arxiv.org/abs/2510.26277).
 
 
 ## Repo layout
