@@ -1,6 +1,6 @@
 """
 Parity test: run the original notebook's selection logic and NEUFS on the
-same essay_comments cache, compare selected indices for several n_shots.
+same neuron cache, compare selected indices for several n_shots.
 
 Both code paths share the same:
   - topk_active_feat (5000 per-sample top-k, zero-score filtered)
@@ -8,22 +8,25 @@ Both code paths share the same:
   - seed / init / n_init / max_iter / tau
 
 The only difference is which JaccardKMedoids + selection loop runs them.
+
+The original implementation is *not* part of this repository. To run the
+comparison, point --orig-dir at a tree providing `AL_algos/Jaccard_KM.py`
+and --cache at the matching neuron cache `.npz` (which must contain
+`score_neuron_features` and `flat_features`).
+
+    python parity_test.py \
+        --orig-dir /path/to/ActiveLearning \
+        --cache /path/to/Qwen3-4B-Instruct-2507_neuron_cache.npz
 """
 
+import argparse
 import os
 import sys
 
 import numpy as np
 import torch
 
-ORIG_DIR = "/ihome/xli/zhc195/ix1_dir/ExpCLS/ExpCLS/PromptTuning/ActiveLearning"
-NEW_DIR = "/ihome/xli/zhc195/ix1_dir/ExpCLS/NEUFS"
-
-sys.path.insert(0, ORIG_DIR)
-sys.path.insert(0, NEW_DIR)
-
-from AL_algos.Jaccard_KM import JaccardKMedoids_MultiStart  # original
-from neufs.select import neufs_select                         # new
+REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def set_seed(seed):
@@ -44,10 +47,11 @@ def build_topk_feat(score_neuron_features, k=5000):
     return topk_active_feat.reshape(L, layer_num, hidden_size)
 
 
-def original_select(X, activated_neuron_num, n_shots, tau=0.5, seed=2025, n_init=10):
+def original_select(kmedoids_cls, X, activated_neuron_num, n_shots,
+                    tau=0.5, seed=2025, n_init=10):
     """Replicate the notebook selection loop verbatim."""
     set_seed(seed)
-    kmedoids = JaccardKMedoids_MultiStart(
+    kmedoids = kmedoids_cls(
         n_clusters=n_shots, max_iter=100, init="k-means++",
         verbose=False, n_init=n_init,
     )
@@ -58,7 +62,6 @@ def original_select(X, activated_neuron_num, n_shots, tau=0.5, seed=2025, n_init
     for idx, cl in enumerate(cluster_labels.tolist()):
         indices_per_cluster.setdefault(cl, []).append(idx)
 
-    alpha = 0
     selected_indices = []
     for cluster_id in range(n_shots):
         if cluster_id not in indices_per_cluster:
@@ -93,7 +96,8 @@ def original_select(X, activated_neuron_num, n_shots, tau=0.5, seed=2025, n_init
     return selected_indices
 
 
-def neufs_run(topk_active_feat, activated_neuron_num, n_shots, tau=0.5, seed=2025, n_init=10):
+def neufs_run(neufs_select, topk_active_feat, activated_neuron_num, n_shots,
+              tau=0.5, seed=2025, n_init=10):
     set_seed(seed)
     X = topk_active_feat.reshape(len(topk_active_feat), -1)
     return neufs_select(
@@ -106,27 +110,45 @@ def neufs_run(topk_active_feat, activated_neuron_num, n_shots, tau=0.5, seed=202
     )
 
 
+def parse_args():
+    p = argparse.ArgumentParser(description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--orig-dir", required=True,
+                   help="Tree providing the original AL_algos/Jaccard_KM.py")
+    p.add_argument("--cache", required=True,
+                   help="Neuron cache .npz with score_neuron_features + flat_features")
+    p.add_argument("--topk", type=int, default=5000)
+    p.add_argument("--taus", type=float, nargs="+", default=[0.0, 0.5, 1.0])
+    p.add_argument("--shots", type=int, nargs="+", default=[5, 10, 20, 30])
+    return p.parse_args()
+
+
 def main():
-    cache_path = os.path.join(
-        ORIG_DIR,
-        "neuron_cache/essay_comments/Qwen3-4B-Instruct-2507_neuron_cache.npz",
-    )
-    print(f"[parity] loading {cache_path}")
-    cache = np.load(cache_path, allow_pickle=True)
+    args = parse_args()
+
+    sys.path.insert(0, args.orig_dir)
+    sys.path.insert(0, REPO_DIR)
+    from AL_algos.Jaccard_KM import JaccardKMedoids_MultiStart  # original
+    from neufs.select import neufs_select                       # new
+
+    print(f"[parity] loading {args.cache}")
+    cache = np.load(args.cache, allow_pickle=True)
     score_neuron_features = cache["score_neuron_features"]
     flat_features = cache["flat_features"]
     activated_neuron_num = flat_features.sum(-1).astype(np.int64)
     print(f"[parity] N={len(flat_features)} score_shape={score_neuron_features.shape}")
 
-    topk_active_feat = build_topk_feat(score_neuron_features, k=5000)
+    topk_active_feat = build_topk_feat(score_neuron_features, k=args.topk)
     X = np.asarray(topk_active_feat.reshape(len(topk_active_feat), -1))
     print(f"[parity] X={X.shape}  per-sample active counts: "
           f"min={X.sum(1).min()} mean={X.sum(1).mean():.0f} max={X.sum(1).max()}")
 
-    for tau in [0.0, 0.5, 1.0]:
-        for n_shots in [5, 10, 20, 30]:
-            orig = original_select(X, activated_neuron_num, n_shots, tau=tau)
-            new = neufs_run(topk_active_feat, activated_neuron_num, n_shots, tau=tau)
+    for tau in args.taus:
+        for n_shots in args.shots:
+            orig = original_select(JaccardKMedoids_MultiStart, X,
+                                   activated_neuron_num, n_shots, tau=tau)
+            new = neufs_run(neufs_select, topk_active_feat,
+                            activated_neuron_num, n_shots, tau=tau)
             orig_s, new_s = sorted(orig), sorted(new)
             match = orig_s == new_s
             print(f"[parity] tau={tau} n_shots={n_shots}  "
